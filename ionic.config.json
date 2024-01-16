@@ -1,0 +1,7 @@
+{
+  "name": "peak-dad-performance",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
