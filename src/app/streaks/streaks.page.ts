@@ -16,7 +16,6 @@ import {
   IonRow,
   IonButtons,
 } from '@ionic/angular/standalone';
-import { StreakService } from '../services/streak-service.service';
 import { StreakListComponent } from '../component/streak-list/streak-list.component';
 import { FormBuilder, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -25,6 +24,7 @@ import { BehaviorSubject } from 'rxjs';
 import { addIcons } from 'ionicons';
 import { add } from 'ionicons/icons';
 import { Streak } from '../model/streak';
+import { StreakStore } from '../store/streak-store';
 
 @Component({
   selector: 'app-streaks',
@@ -48,12 +48,17 @@ import { Streak } from '../model/streak';
           <ion-title size="large">Streaks</ion-title>
         </ion-toolbar>
       </ion-header>
+      <section class="mt-8">
+        <p class="text-center">
+          {{ today | date : 'EEEE, MMMM d, y' }}
+        </p>
+      </section>
       <section>
         <app-streak-list
-          [streaks]="streakService.streaks()"
-          (toggle)="streakService.toggle$.next($event)"
+          [streaks]="streakStore.streaks()"
+          (toggle)="toggleStreak($event)"
           (edit)="streakBeingEdited.set($event)"
-          (delete)="streakService.remove$.next($event)"
+          (delete)="streakStore.deleteStreak($event!)"
         />
       </section>
       <ion-modal
@@ -69,11 +74,8 @@ import { Streak } from '../model/streak';
             [formGroup]="streakForm"
             (save)="
               streakBeingEdited()?.id
-                ? streakService.edit$.next({
-                    id: streakBeingEdited()!.id!,
-                    data: streakForm.getRawValue()
-                  })
-                : streakService.add$.next(streakForm.getRawValue())
+                ? editStreak()
+                : streakStore.createStreak(streakForm.getRawValue())
             "
           ></app-form-modal>
         </ng-template>
@@ -107,12 +109,14 @@ import { Streak } from '../model/streak';
       }
     `,
   ],
+  providers: [StreakStore],
 })
 export class StreaksPage {
-  streakService = inject(StreakService);
+  readonly streakStore = inject(StreakStore);
   formBuilder = inject(FormBuilder);
   formModalIsOpen$ = new BehaviorSubject<boolean>(false);
-  streakBeingEdited = signal<Partial<Streak> | null>(null);
+  streakBeingEdited = signal<Streak | null>(null);
+  today: Date = new Date();
 
   streakForm = this.formBuilder.nonNullable.group({
     title: ['', Validators.required],
@@ -120,7 +124,6 @@ export class StreaksPage {
 
   constructor() {
     addIcons({ add });
-
     effect(() => {
       const streak = this.streakBeingEdited();
 
@@ -133,5 +136,21 @@ export class StreaksPage {
         this.formModalIsOpen$.next(true);
       }
     });
+  }
+
+  editStreak() {
+    const streak = {
+      ...this.streakBeingEdited(),
+      title: this.streakForm.getRawValue().title,
+    };
+    this.streakStore.editStreak(streak);
+  }
+
+  toggleStreak(streak: Streak) {
+    const streakToReturn = {
+      ...streak,
+      completed: !streak.completed,
+    };
+    this.streakStore.toggleStreak(streakToReturn);
   }
 }

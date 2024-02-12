@@ -1,7 +1,7 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { StreakService } from 'src/app/services/streak-service.service';
 import {
   IonHeader,
   IonToolbar,
@@ -11,6 +11,7 @@ import {
   IonIcon,
   IonButtons,
 } from '@ionic/angular/standalone';
+import { StreakStore } from 'src/app/store/streak-store';
 
 @Component({
   selector: 'app-streak',
@@ -25,6 +26,7 @@ import {
     RouterLink,
     IonContent,
     IonIcon,
+    DatePipe,
   ],
   template: `
     <ion-header>
@@ -38,6 +40,17 @@ import {
 
     <ion-content>
       <div>
+        <div class="my-10">
+          <p class="text-center text-lg">Streak Name: {{ streak()?.title }}</p>
+          <p class="text-center">
+            Last Completed:
+            {{
+              streak()?.lastCompleted
+                ? (streak()?.lastCompleted | date : 'EEEE, MMMM d, y')
+                : 'Not Completed Yet'
+            }}
+          </p>
+        </div>
         <div class="mx-auto max-w-7xl">
           <div
             class="grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-3 lg:place-items-center"
@@ -81,15 +94,16 @@ import {
       </div>
     </ion-content>
   `,
+  providers: [StreakStore],
 })
 export default class StreakComponent {
-  streakService = inject(StreakService);
+  streakStore = inject(StreakStore);
   route = inject(ActivatedRoute);
 
   params = toSignal(this.route.paramMap);
 
   streak = computed(() =>
-    this.streakService
+    this.streakStore
       .streaks()
       .find((streak) => streak.id === Number(this.params()?.get('id')))
   );

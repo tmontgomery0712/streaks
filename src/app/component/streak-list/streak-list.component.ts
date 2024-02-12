@@ -37,7 +37,7 @@ import { Router, RouterLink } from '@angular/router';
         <div class="flex justify-between items-center">
           <div class="flex items-center ml-4" id="checkBoxContainer">
             <ion-checkbox
-              (click)="$event.stopPropagation(); toggle.emit(streak.id)"
+              (click)="$event.stopPropagation(); toggle.emit(streak)"
               [checked]="streak.completed"
               justify="start"
             ></ion-checkbox>
@@ -61,11 +61,7 @@ import { Router, RouterLink } from '@angular/router';
           </div>
         </div>
         <div class="mt-2 ml-4 flex items-center" id="streakInfoContainer">
-          <ion-icon
-            size="small"
-            slot="icon-only"
-            name="flame-outline"
-          ></ion-icon>
+          🔥
           <p class="text-xs ml-1">{{ streak.currentStreak }}</p>
         </div>
       </div>
@@ -100,7 +96,7 @@ export class StreakListComponent {
   streakService = inject(StreakService);
   router = inject(Router);
   @Input() streaks!: Streak[];
-  @Output() toggle = new EventEmitter<RemoveStreak>();
+  @Output() toggle = new EventEmitter<Streak>();
   @Output() delete = new EventEmitter<RemoveStreak>();
   @Output() edit = new EventEmitter<Streak>();
 
